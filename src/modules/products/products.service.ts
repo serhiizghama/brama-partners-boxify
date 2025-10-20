@@ -40,11 +40,23 @@ export class ProductsService {
     };
   }
 
+  async getById(id: string): Promise<ProductEntity> {
+    const entity = await this.repo.findOne({ where: { id } });
+    if (!entity) throw new NotFoundException('Product not found');
+    return entity;
+  }
+
   async update(id: string, dto: UpdateProductDto): Promise<ProductEntity> {
     const entity = await this.repo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('Product not found');
 
     Object.assign(entity, dto);
     return await this.repo.save(entity);
+  }
+
+  async remove(id: string): Promise<void> {
+    const entity = await this.repo.findOne({ where: { id } });
+    if (!entity) throw new NotFoundException('Product not found');
+    await this.repo.remove(entity);
   }
 }
