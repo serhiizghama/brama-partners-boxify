@@ -9,7 +9,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { BoxEntity } from '../boxes/box.entity';
+import { BoxEntity } from '../../boxes/entities/box.entity';
 
 @Entity('products')
 @Unique(['barcode'])
@@ -25,16 +25,19 @@ export class ProductEntity {
   @Index()
   barcode!: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  boxId: string | null;
+  @Column({ name: 'box_id', type: 'uuid', nullable: true })
+  box_id: string | null;
 
-  @ManyToOne(() => BoxEntity, (box) => box.products, { nullable: true })
-  @JoinColumn({ name: 'boxId' })
+  @ManyToOne(() => BoxEntity, (box) => box.products, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'box_id' })
   box?: BoxEntity | null;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   created_at!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updated_at!: Date;
 }

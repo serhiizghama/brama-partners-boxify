@@ -8,7 +8,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { BoxStatus } from '../../../domain/boxes/box-status.enum';
+import { BoxStatus } from '../../../domain/boxes/enums/box-status.enum';
 
 export class ListBoxesQuery {
   @IsOptional()

@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, Matches } from 'class-validator';
-import { BoxStatus } from '../../../domain/boxes/box-status.enum';
+import { BoxStatus } from '../../../domain/boxes/enums/box-status.enum';
 
 export class CreateBoxDto {
   @Matches(/^[A-Z0-9-_]{3,32}$/)
