@@ -10,13 +10,13 @@ import {
 
 export class ListProductsQuery {
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => parseInt(value as string, 10))
   @IsInt()
   @IsPositive()
   limit = 20;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => parseInt(value as string, 10))
   @IsInt()
   @Min(0)
   offset = 0;
