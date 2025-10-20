@@ -6,7 +6,10 @@ import {
   UpdateDateColumn,
   Index,
   Unique,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { BoxEntity } from '../boxes/box.entity';
 
 @Entity('products')
 @Unique(['barcode'])
@@ -22,9 +25,12 @@ export class ProductEntity {
   @Index()
   barcode!: string;
 
-  // TODO remove null
   @Column({ type: 'uuid', nullable: true })
   boxId: string | null;
+
+  @ManyToOne(() => BoxEntity, (box) => box.products, { nullable: true })
+  @JoinColumn({ name: 'boxId' })
+  box?: BoxEntity | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;

@@ -1,14 +1,22 @@
-// src/config/typeorm.config.ts
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 
-export const typeOrmConfig = (): TypeOrmModuleOptions => ({
-  type: 'postgres',
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number(process.env.DB_PORT ?? 5432),
-  database: process.env.DB_NAME ?? 'boxify',
-  username: process.env.DB_USER ?? 'postgres',
-  password: process.env.DB_PASSWORD ?? 'postgres',
-  synchronize: process.env.DB_SYNC === 'true',
-  autoLoadEntities: true,
-  logging: process.env.DB_LOGGING === 'true' ? ['query', 'error'] : ['error'],
-});
+@Injectable()
+export class TypeOrmConfigService implements TypeOrmOptionsFactory {
+  constructor(private configService: ConfigService) {}
+
+  createTypeOrmOptions(): TypeOrmModuleOptions {
+    return {
+      type: 'postgres',
+      host: this.configService.get<string>('DB_HOST'),
+      port: this.configService.get<number>('DB_PORT'),
+      username: this.configService.get<string>('DB_USER'),
+      password: this.configService.get<string>('DB_PASSWORD'),
+      database: this.configService.get<string>('DB_NAME'),
+      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+      synchronize: this.configService.get<boolean>('DB_SYNC'),
+      logging: this.configService.get<boolean>('DB_LOGGING'),
+    };
+  }
+}
