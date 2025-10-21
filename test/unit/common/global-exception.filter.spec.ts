@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { GlobalExceptionFilter } from '../../../src/common/filters/global-exception.filter';
 import { BusinessRuleViolationException } from '../../../src/common/exceptions/business-rule-violation.exception';
 import { InvalidStatusTransitionException } from '../../../src/common/exceptions/invalid-status-transition.exception';
