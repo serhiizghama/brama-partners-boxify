@@ -1,14 +1,17 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateBoxDto } from './create-box.dto';
-import { IsEnum, IsOptional, Matches } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
 import { BoxStatus } from '../../../domain/boxes/enums/box-status.enum';
 
-export class UpdateBoxDto extends PartialType(CreateBoxDto) {
+export class UpdateBoxDto {
   @IsOptional()
-  @Matches(/^[A-Z0-9-_]{3,32}$/)
+  @IsString()
+  @Matches(/^[A-Z0-9-_]{3,32}$/, {
+    message: 'Label must match pattern [A-Z0-9-_]{3,32}',
+  })
   label?: string;
 
   @IsOptional()
-  @IsEnum(BoxStatus)
+  @IsEnum(BoxStatus, {
+    message: 'Status must be one of: CREATED, SEALED, SHIPPED',
+  })
   status?: BoxStatus;
 }

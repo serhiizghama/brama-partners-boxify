@@ -1,9 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { GlobalExceptionFilter } from '../../../src/common/filters/global-exception.filter';
 import { BusinessRuleViolationException } from '../../../src/common/exceptions/business-rule-violation.exception';
 import { InvalidStatusTransitionException } from '../../../src/common/exceptions/invalid-status-transition.exception';
 import { QueryFailedError } from 'typeorm';
+
+jest.mock('@nestjs/common', () => {
+  const mockLogger = {
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+  };
+
+  class MockLoggerClass {
+    constructor() {
+      return mockLogger;
+    }
+    static overrideLogger = jest.fn();
+  }
+
+  return {
+    ...jest.requireActual('@nestjs/common'),
+    Logger: MockLoggerClass,
+  };
+});
 
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;
@@ -13,7 +35,9 @@ describe('GlobalExceptionFilter', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GlobalExceptionFilter],
+      providers: [
+        GlobalExceptionFilter,
+      ],
     }).compile();
 
     filter = module.get<GlobalExceptionFilter>(GlobalExceptionFilter);
@@ -85,7 +109,7 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should handle QueryFailedError correctly', () => {
-    const exception = new QueryFailedError('SELECT * FROM non_existent_table', [], 'Query failed');
+    const exception = new QueryFailedError<any>('SELECT * FROM non_existent_table', [], new Error('Query failed'));
 
     filter.catch(exception, mockArgumentsHost);
 
