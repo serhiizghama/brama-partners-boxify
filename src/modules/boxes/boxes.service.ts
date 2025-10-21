@@ -4,11 +4,45 @@ import { UpdateBoxDto } from './dto/update-box.dto';
 import { BoxRepository } from './infrastructure/box.repository';
 import { BoxEntity } from '../../domain/boxes/entities/box.entity';
 import { BoxStatus } from '../../domain/boxes/enums/box-status.enum';
-import { BusinessRuleViolationException, InvalidStatusTransitionException } from '../../common/exceptions';
+import {
+  BusinessRuleViolationException,
+  InvalidStatusTransitionException,
+} from '../../common/exceptions';
+import { CreateBoxDto } from './dto/create-box.dto';
+import { ProductRepository } from '../products/infrastructure/product.repository';
+import { DataSource, EntityManager } from 'typeorm';
+import { TransactionRepository } from './infrastructure/transaction.repository';
 
 @Injectable()
 export class BoxesService {
-  constructor(private readonly boxRepository: BoxRepository) { }
+  constructor(
+    private readonly boxRepository: BoxRepository,
+    private readonly productRepository: ProductRepository,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  async create(dto: CreateBoxDto): Promise<BoxEntity> {
+    return this.dataSource.transaction(async (manager: EntityManager) => {
+      const transactionRepo = new TransactionRepository(manager);
+      const newBox = await transactionRepo.createBox(dto);
+
+      if (dto.productIds && dto.productIds.length > 0) {
+        for (const productId of dto.productIds) {
+          const product = await transactionRepo.findProductById(productId);
+          if (!product) {
+            throw new NotFoundException(`Product with id ${productId} not found`);
+          }
+          if (product.box_id) {
+            throw new BusinessRuleViolationException(
+              `Product with id ${productId} is already in another box.`,
+            );
+          }
+          await transactionRepo.updateProductBoxId(productId, newBox.id);
+        }
+      }
+      return newBox;
+    });
+  }
 
   async list(q: ListBoxesQuery) {
     const [data, total] = await this.boxRepository.findAndCount(q);

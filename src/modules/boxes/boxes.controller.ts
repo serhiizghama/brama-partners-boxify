@@ -1,11 +1,17 @@
-import { Controller, Get, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, Body, Query, Post } from '@nestjs/common';
 import { BoxesService } from './boxes.service';
 import { ListBoxesQuery } from './dto/list-boxes.query';
 import { UpdateBoxDto } from './dto/update-box.dto';
+import { CreateBoxDto } from './dto/create-box.dto';
 
 @Controller('boxes')
 export class BoxesController {
-  constructor(private readonly service: BoxesService) { }
+  constructor(private readonly service: BoxesService) {}
+
+  @Post()
+  create(@Body() dto: CreateBoxDto) {
+    return this.service.create(dto);
+  }
 
   @Get()
   list(@Query() q: ListBoxesQuery) {
