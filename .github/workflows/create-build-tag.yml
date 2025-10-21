@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
-      tags: write  
+      contents: write
 
     steps:
       - name: '📂 Checkout code'
