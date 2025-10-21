@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      tags: write
+      contents: write
 
     steps:
       - name: 'Checkout code'
