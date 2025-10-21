@@ -24,40 +24,35 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let error: string;
 
     if (exception instanceof HttpException) {
-      // Обработка HTTP исключений (включая наши кастомные)
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        message = (exceptionResponse as any).message || exception.message;
-        error = (exceptionResponse as any).error || exception.name || 'Http Exception';
+        const responseObj = exceptionResponse as Record<string, unknown>;
+        message = (responseObj.message as string) || exception.message;
+        error = (responseObj.error as string) || exception.name || 'Http Exception';
       } else {
         message = exception.message;
         error = exception.name || 'Http Exception';
       }
     } else if (exception instanceof QueryFailedError) {
-      // Обработка ошибок TypeORM
       status = this.mapTypeOrmError(exception);
       message = this.getTypeOrmErrorMessage(exception);
       error = 'Database Error';
     } else if (exception instanceof ValidationError) {
-      // Обработка ошибок валидации class-validator
       status = HttpStatus.BAD_REQUEST;
       message = this.formatValidationError(exception);
       error = 'Validation Error';
     } else if (exception instanceof Error) {
-      // Обработка общих ошибок
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.message;
       error = 'Internal Server Error';
     } else {
-      // Неизвестные ошибки
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Internal server error';
       error = 'Unknown Error';
     }
 
-    // Логирование ошибки
     this.logger.error(
       `Exception caught: ${JSON.stringify({
         status,
@@ -70,7 +65,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : undefined,
     );
 
-    // Отправка ответа
     response.status(status).json({
       statusCode: status,
       message,
@@ -80,41 +74,39 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     });
   }
 
-  private mapTypeOrmError(exception: QueryFailedError): number {
+  private mapTypeOrmError(exception: QueryFailedError<any>): number {
     const message = exception.message.toLowerCase();
-    
-    // Маппинг ошибок TypeORM на HTTP статусы
+
     if (message.includes('not found') || message.includes('does not exist')) {
       return HttpStatus.NOT_FOUND;
     }
-    
+
     if (message.includes('duplicate') || message.includes('unique constraint')) {
       return HttpStatus.CONFLICT;
     }
-    
+
     if (message.includes('foreign key') || message.includes('constraint')) {
       return HttpStatus.BAD_REQUEST;
     }
-    
+
     return HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  private getTypeOrmErrorMessage(exception: QueryFailedError): string {
+  private getTypeOrmErrorMessage(exception: QueryFailedError<any>): string {
     const message = exception.message;
-    
-    // Упрощение сообщений об ошибках TypeORM для пользователя
+
     if (message.includes('duplicate key')) {
       return 'Resource already exists';
     }
-    
+
     if (message.includes('foreign key constraint')) {
       return 'Referenced resource does not exist';
     }
-    
+
     if (message.includes('not null constraint')) {
       return 'Required field is missing';
     }
-    
+
     return 'Database operation failed';
   }
 
