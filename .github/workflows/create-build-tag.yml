@@ -1,13 +1,15 @@
-name: '🔖 CI: Create Build Tag on Main'
+name: 'CI: Create Build Tag on Main'
 
 on:
   push:
     branches:
       - main
 
+  workflow_dispatch:
+
 jobs:
   tag-build:
-    name: '🏷️ Tag Build'
+    name: 'Tag Build'
     runs-on: ubuntu-latest
 
     permissions:
@@ -15,25 +17,25 @@ jobs:
       tags: write  
 
     steps:
-      - name: '📂 Checkout code'
+      - name: 'Checkout code'
         uses: actions/checkout@v4
 
-      - name: '🚀 Setup Node.js'
+      - name: 'Setup Node.js'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: '📦 Get version from package.json'
+      - name: 'Get version from package.json'
         id: package-version
         run: |
           echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: '⚙️ Set tag name'
+      - name: 'Set tag name'
         id: tag-name
         run: |
           echo "tag=v${{ steps.package-version.outputs.version }}-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: '✨ Create & Push Git tag'
+      - name: 'Create & Push Git tag'
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
