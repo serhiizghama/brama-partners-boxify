@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { ProductEntity } from '../../../domain/products/entities/product.entity';
@@ -12,7 +12,7 @@ export class ProductRepository {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly repo: Repository<ProductEntity>,
-  ) {}
+  ) { }
 
   async create(dto: CreateProductDto): Promise<ProductEntity> {
     const entity = this.repo.create(dto);
@@ -29,7 +29,7 @@ export class ProductRepository {
       : {};
 
     const order: SortOptions = { [q.sort_by]: q.direction.toUpperCase() as SortDirection };
-    
+
     return await this.repo.findAndCount({
       where,
       order,
@@ -38,18 +38,24 @@ export class ProductRepository {
     });
   }
 
-  async update(id: string, dto: UpdateProductDto): Promise<ProductEntity | null> {
-    const entity = await this.repo.findOne({ where: { id } });
-    if (!entity) return null;
+  async update(id: string, dto: UpdateProductDto): Promise<ProductEntity> {
+    const entity = await this.repo.findOneBy({ id });
+
+    if (!entity) {
+      throw new NotFoundException(`Product with ID "${id}" not found`);
+    }
 
     Object.assign(entity, dto);
-    return await this.repo.save(entity);
+
+    return this.repo.save(entity);
   }
 
   async remove(id: string): Promise<boolean> {
-    const entity = await this.repo.findOne({ where: { id } });
-    if (!entity) return false;
-    
+    const entity = await this.repo.findOneBy({ id });
+    if (!entity) {
+      throw new NotFoundException(`Product with ID "${id}" not found`);
+    }
+
     await this.repo.remove(entity);
     return true;
   }
