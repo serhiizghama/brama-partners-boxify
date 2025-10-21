@@ -29,16 +29,19 @@ describe('GlobalExceptionFilter', () => {
     };
 
     mockArgumentsHost = {
-      switchToHttp: jest.fn<() => { getResponse: () => typeof mockResponse; getRequest: () => typeof mockRequest }>().mockReturnValue({
+      switchToHttp: jest.fn().mockReturnValue({
         getResponse: () => mockResponse,
         getRequest: () => mockRequest,
-      }),
+      }) as unknown as {
+        getResponse: () => typeof mockResponse;
+        getRequest: () => typeof mockRequest;
+      },
     } as unknown as ArgumentsHost;
   });
 
   it('should handle HttpException correctly', () => {
     const exception = new HttpException('Test error', HttpStatus.BAD_REQUEST);
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
@@ -53,7 +56,7 @@ describe('GlobalExceptionFilter', () => {
 
   it('should handle BusinessRuleViolationException correctly', () => {
     const exception = new BusinessRuleViolationException('Product already in box');
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
@@ -68,7 +71,7 @@ describe('GlobalExceptionFilter', () => {
 
   it('should handle InvalidStatusTransitionException correctly', () => {
     const exception = new InvalidStatusTransitionException('Cannot transition from SHIPPED to CREATED');
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -83,7 +86,7 @@ describe('GlobalExceptionFilter', () => {
 
   it('should handle QueryFailedError correctly', () => {
     const exception = new QueryFailedError('SELECT * FROM non_existent_table', [], 'Query failed');
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -98,7 +101,7 @@ describe('GlobalExceptionFilter', () => {
 
   it('should handle generic Error correctly', () => {
     const exception = new Error('Generic error');
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -113,7 +116,7 @@ describe('GlobalExceptionFilter', () => {
 
   it('should handle unknown exceptions correctly', () => {
     const exception = 'String error';
-    
+
     filter.catch(exception, mockArgumentsHost);
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
