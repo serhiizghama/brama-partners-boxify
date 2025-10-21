@@ -3,6 +3,8 @@ import { BoxesService } from './boxes.service';
 import { ListBoxesQuery } from './dto/list-boxes.query';
 import { UpdateBoxDto } from './dto/update-box.dto';
 import { CreateBoxDto } from './dto/create-box.dto';
+import { AddProductsDto } from './dto/add-products.dto';
+import { RemoveProductsDto } from './dto/remove-products.dto';
 
 @Controller('boxes')
 export class BoxesController {
@@ -11,6 +13,16 @@ export class BoxesController {
   @Post()
   create(@Body() dto: CreateBoxDto) {
     return this.service.create(dto);
+  }
+
+  @Post(':id/products')
+  addProducts(@Param('id') id: string, @Body() dto: AddProductsDto) {
+    return this.service.addProducts(id, dto);
+  }
+
+  @Delete(':id/products')
+  removeProducts(@Param('id') id: string, @Body() dto: RemoveProductsDto) {
+    return this.service.removeProducts(id, dto);
   }
 
   @Get()

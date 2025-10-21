@@ -11,6 +11,8 @@ import {
 import { CreateBoxDto } from './dto/create-box.dto';
 import { ProductRepository } from '../products/infrastructure/product.repository';
 import { DataSource, EntityManager } from 'typeorm';
+import { AddProductsDto } from './dto/add-products.dto';
+import { RemoveProductsDto } from './dto/remove-products.dto';
 import { TransactionRepository } from './infrastructure/transaction.repository';
 
 @Injectable()
@@ -43,6 +45,79 @@ export class BoxesService {
       return newBox;
     });
   }
+
+  async addProducts(id: string, dto: AddProductsDto): Promise<BoxEntity> {
+    return this.dataSource.transaction(async (manager: EntityManager) => {
+      const transactionRepo = new TransactionRepository(manager);
+
+      const box = await transactionRepo.findBoxById(id);
+      if (!box) {
+        throw new NotFoundException(`Box with id ${id} not found`);
+      }
+
+      if (box.status !== BoxStatus.CREATED) {
+        throw new BusinessRuleViolationException(
+          `Cannot add products to a box with status ${box.status}. Only boxes with status CREATED can be modified.`,
+        );
+      }
+
+      for (const productId of dto.productIds) {
+        const product = await transactionRepo.findProductById(productId);
+        if (!product) {
+          throw new NotFoundException(`Product with id ${productId} not found`);
+        }
+        if (product.box_id) {
+          throw new BusinessRuleViolationException(
+            `Product with id ${productId} is already in another box.`,
+          );
+        }
+      await transactionRepo.updateProductBoxId(productId, box.id);
+      }
+
+      const updatedBox = await transactionRepo.findBoxById(id);
+      if (!updatedBox) {
+        throw new NotFoundException(`Box with id ${id} not found`);
+      }
+      return updatedBox;
+    });
+  }
+
+  async removeProducts(id: string, dto: RemoveProductsDto): Promise<BoxEntity> {
+    return this.dataSource.transaction(async (manager: EntityManager) => {
+      const transactionRepo = new TransactionRepository(manager);
+
+      const box = await transactionRepo.findBoxById(id);
+      if (!box) {
+        throw new NotFoundException(`Box with id ${id} not found`);
+      }
+
+      if (box.status !== BoxStatus.CREATED) {
+        throw new BusinessRuleViolationException(
+          `Cannot remove products from a box with status ${box.status}. Only boxes with status CREATED can be modified.`,
+        );
+      }
+
+      for (const productId of dto.productIds) {
+        const product = await transactionRepo.findProductById(productId);
+        if (!product) {
+          throw new NotFoundException(`Product with id ${productId} not found`);
+        }
+        if (product.box_id !== id) {
+          throw new BusinessRuleViolationException(
+            `Product with id ${productId} is not in this box.`,
+          );
+        }
+        await transactionRepo.updateProductBoxId(productId, null);
+      }
+
+      const updatedBox = await transactionRepo.findBoxById(id);
+      if (!updatedBox) {
+        throw new NotFoundException(`Box with id ${id} not found`);
+      }
+      return updatedBox;
+    });
+  }
+
 
   async list(q: ListBoxesQuery) {
     const [data, total] = await this.boxRepository.findAndCount(q);
